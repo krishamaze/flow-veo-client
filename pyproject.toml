@@ -1,0 +1,20 @@
+[project]
+name = "flow-veo-client"
+version = "1.0.0"
+description = "Standalone Veo 3 video generation client for Vertex AI"
+requires-python = ">=3.10"
+dependencies = [
+    "google-genai>=1.0.0",
+]
+authors = [
+    {name = "krishamaze"},
+]
+license = {text = "MIT"}
+
+[project.scripts]
+flow-veo = "flow_veo_client:main"
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+]

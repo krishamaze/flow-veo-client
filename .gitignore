@@ -1,0 +1,8 @@
+output/
+*.mp4
+*.webm
+__pycache__/
+*.egg-info/
+dist/
+build/
+.env
