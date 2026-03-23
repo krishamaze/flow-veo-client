@@ -1,66 +1,87 @@
 # flow-veo-client
 
-Standalone Veo 3 video generation client using Google Vertex AI.
+Reverse-engineered [Flow](https://labs.google.com/fx/tools/video-fx) video generation client. No API key needed — uses your existing Google OAuth tokens (from antigravity proxy) to call Flow's private HTTP endpoints for Veo 3 video generation.
+
+## How It Works
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────────┐
+│  This Client │────▶│  Flow's Private  │────▶│  Veo 3 Generation   │
+│  (Python)    │     │  HTTP Endpoints  │     │  (labs.google.com)  │
+└─────────────┘     └──────────────────┘     └─────────────────────┘
+        │
+        ▼
+  Uses OAuth tokens from
+  antigravity proxy accounts
+```
 
 ## Setup
 
+### 1. Prerequisites
+
+- Antigravity proxy with accounts configured (`~/.config/antigravity-proxy/accounts.json`)
+- Flow credits on your Google account
+
+### 2. Capture Flow's API Endpoints (One-Time)
+
+The client needs to know Flow's private endpoints. Capture them from your browser:
+
 ```bash
-pip install google-genai
+# Option A: Export HAR from Chrome DevTools
+# 1. Open labs.google.com/fx/tools/video-fx
+# 2. Open DevTools (F12) → Network → Preserve log
+# 3. Generate a video through the UI
+# 4. Right-click → Save all as HAR
+python flow_veo_client.py capture --har traffic.har
 
-# Authenticate
-gcloud auth application-default login
+# Option B: Manually set endpoints (if you know them)
+python flow_veo_client.py capture --set generate=/fx/api/v1/video/create
+python flow_veo_client.py capture --set status=/fx/api/v1/video/status/{id}
 
-# Set your project
-export GOOGLE_CLOUD_PROJECT="your-project-id"
+# View current endpoints
+python flow_veo_client.py capture --show
 ```
 
 ## Usage
 
 ```bash
-# Basic generation
-python flow_veo_client.py "A cinematic sunset over mountains"
+# Generate a video
+python flow_veo_client.py generate "A cinematic sunset over mountains"
 
-# Vertical video (Reels/TikTok)
-python flow_veo_client.py --prompt "A dancer in slow motion" --aspect-ratio 9:16
+# Vertical (Reels/TikTok)
+python flow_veo_client.py generate -p "A dancer" -a 9:16
 
-# Image-to-video
-python flow_veo_client.py --prompt "Zoom into the scene" --image reference.jpg
+# Specific account
+python flow_veo_client.py generate "prompt" --account user@gmail.com
 
-# Without audio
-python flow_veo_client.py --prompt "Silent timelapse" --no-audio
+# Custom output
+python flow_veo_client.py generate "prompt" -o my_video.mp4
 
-# Multiple outputs
-python flow_veo_client.py --prompt "A cat" --number 4
+# Check credits
+python flow_veo_client.py credits
+
+# List accounts
+python flow_veo_client.py accounts
 
 # Pipeline mode (JSON output)
-python flow_veo_client.py --prompt "Product demo" --json --output demo.mp4
+python flow_veo_client.py generate "prompt" --json
 ```
 
-## Options
+## Commands
 
-| Flag | Description | Default |
-|------|-------------|---------|
-| `-p, --prompt` | Video description | required |
-| `-m, --model` | `veo-3` or `veo-2` | `veo-3` |
-| `-a, --aspect-ratio` | `16:9`, `9:16`, `1:1` | `16:9` |
-| `-n, --number` | Videos to generate (1-4) | `1` |
-| `-d, --duration` | Duration: 5 or 8 seconds | auto |
-| `--no-audio` | Disable audio (veo-3 only) | audio on |
-| `-i, --image` | Reference image path | none |
-| `-o, --output` | Output dir or filename | `output/` |
-| `--project` | GCP project ID | `$GOOGLE_CLOUD_PROJECT` |
-| `--region` | GCP region | `us-central1` |
-| `--json` | JSON output for pipelines | off |
+| Command | Description |
+|---------|-------------|
+| `capture` | Discover/configure Flow API endpoints |
+| `generate` | Generate a video |
+| `accounts` | List available OAuth accounts |
+| `credits` | Check remaining Flow credits |
 
-## Integration
+## Architecture
 
-```python
-from flow_veo_client import get_client, generate_video, save_videos
-
-client = get_client("my-project", "us-central1")
-videos = generate_video(client, prompt="A sunset", aspect_ratio="9:16")
-save_videos(videos, "output/")
-```
+- **Zero dependencies** — stdlib only (no pip install needed)
+- **Reuses antigravity proxy accounts** — same OAuth tokens, no extra auth
+- **HAR-based discovery** — parse browser traffic to find endpoints
+- **Endpoint config** — saved to `~/.config/flow-veo-client/endpoints.json`
 
 ## License
 

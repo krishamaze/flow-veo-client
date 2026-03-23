@@ -1,11 +1,9 @@
 [project]
 name = "flow-veo-client"
 version = "1.0.0"
-description = "Standalone Veo 3 video generation client for Vertex AI"
+description = "Reverse-engineered Flow video generation client using Veo 3"
 requires-python = ">=3.10"
-dependencies = [
-    "google-genai>=1.0.0",
-]
+dependencies = []
 authors = [
     {name = "krishamaze"},
 ]
@@ -16,5 +14,6 @@ flow-veo = "flow_veo_client:main"
 
 [project.optional-dependencies]
 dev = [
+    "mitmproxy",
     "ruff",
 ]
